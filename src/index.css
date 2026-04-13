@@ -1,0 +1,82 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  @apply border-ace-border;
+}
+
+@layer utilities {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .pb-nav {
+    padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-ace-bg text-gray-100;
+  font-feature-settings: "rounding" 1;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.card-glow {
+  @apply ring-1 ring-emerald-500/20 hover:ring-emerald-500/40 transition-all;
+}
+
+.glow-text {
+  @apply text-emerald-400 drop-shadow-lg;
+}
+
+.badge-glow {
+  @apply ring-2 ring-emerald-500 animate-pulse-glow;
+}
+
+.mde-excellent {
+  @apply bg-emerald-500/20 border-emerald-500/50;
+}
+
+.mde-outstanding {
+  @apply bg-emerald-400/30 border-emerald-400 animate-pulse-glow;
+}
+
+.skill-bar {
+  @apply h-2 bg-gray-700 rounded-full overflow-hidden;
+}
+
+.skill-bar-fill {
+  @apply h-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all duration-300;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.shimmer {
+  animation: shimmer 2s infinite;
+  background: linear-gradient(to right, #0a0f0a 0%, #1a2e1a 50%, #0a0f0a 100%);
+  background-size: 1000px 100%;
+}

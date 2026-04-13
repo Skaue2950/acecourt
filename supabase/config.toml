@@ -1,0 +1,49 @@
+# Supabase Configuration for ACECOURT
+
+[project]
+# Project name
+name = "acecourt"
+
+# Database settings
+[db]
+# Port for the local PostgreSQL instance
+port = 54322
+# Limit how many connections can be open (0 = unlimited)
+max_connections = 20
+
+[api]
+# Port for the local REST API
+port = 54321
+# Enable the REST API
+enabled = true
+
+[auth]
+# Site URL is the base URL of your application. Used as an allow-list for redirects.
+site_url = "http://localhost:5173"
+# Additional redirect URLs (besides site_url)
+additional_redirect_urls = ["http://localhost:5173"]
+# JWT secret for signing tokens
+jwt_secret = "your-super-secret-jwt-token-key-change-this-in-production"
+# JWT expiry in seconds (1 hour)
+jwt_expiry = 3600
+# Refresh token expiry in seconds (7 days)
+refresh_token_rotation_enabled = true
+refresh_token_reuse_interval = 10
+
+[storage]
+# The maximum file size allowed (in bytes)
+file_size_limit = 52428800
+# Allowed MIME types for upload
+allowed_mime_types = ["image/jpeg", "image/png", "image/webp"]
+
+[realtime]
+# Enable real-time functionality
+enabled = true
+# Max connections
+max_connections = 100
+# JWT secret
+jwt_secret = "your-super-secret-jwt-token-key-change-this-in-production"
+
+[studio]
+# Enable Studio at http://localhost:54323
+enabled = true
