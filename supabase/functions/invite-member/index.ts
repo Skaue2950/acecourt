@@ -14,7 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    const { email, role, clubId, invitedBy, inviteUrl } = await req.json()
+    const { email, role, clubId, invitedBy } = await req.json()
 
     // Validate inputs
     if (!email || !role || !clubId || !invitedBy) {
@@ -48,7 +48,7 @@ serve(async (req) => {
       .single()
 
     if (inviteError) {
-      console.error('Error creating invitation:', inviteError)
+      console.error('Error creating invitation')
       return new Response(
         JSON.stringify({ error: inviteError.message }),
         {
@@ -58,15 +58,10 @@ serve(async (req) => {
       )
     }
 
-    // In production, you would send an email here using:
-    // - Supabase Email
-    // - Resend
-    // - SendGrid
-    // - etc.
-    //
-    // For now, we just return the token
-    console.log(`Invitation created for ${email}: ${invitation.token}`)
-    console.log(`Full invitation URL would be: ${inviteUrl}?token=${invitation.token}`)
+    // Do not log the address or the token. Edge logs are retained and
+    // readable by anyone with project access. The caller still receives the
+    // token in the response until a mailer exists; that response is a
+    // separate problem (see docs/GDPR_SECURITY.md).
 
     return new Response(
       JSON.stringify({
@@ -80,7 +75,7 @@ serve(async (req) => {
       }
     )
   } catch (error) {
-    console.error('Function error:', error)
+    console.error('Function error')
     return new Response(
       JSON.stringify({ error: error.message || 'Unknown error' }),
       {
