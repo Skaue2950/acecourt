@@ -32,7 +32,7 @@ Live checks were read-only and only on staging. Demo login could not be complete
 
 This repo is a Danish gamification prototype: MDE scores, a six-skill radar, Pro Shop, and a landing page whose built HTML is what `acecourt-eight.vercel.app` serves. It has no CourtDNA dimensions, no parent portal, no superadmin, no season planner, and no “at risk” flag. `IMPLEMENTATION_SUMMARY.md` describes that prototype and overstates how finished it is.
 
-Because the live source is not here, **nothing below was patched in application code.** A schema migration in this repo would change the legacy Vite database, not staging, and could be mistaken for a production migration. None was added and none was applied.
+Because the live source is not here, **the Next.js app on staging and on www.acecourt.dk was not patched.** A schema migration in this repo would change the legacy Vite database, not staging, and could be mistaken for a production migration. None was added and none was applied. The only code edit is in the legacy `invite-member` function: it no longer writes the invitee’s email or the invitation token to logs. That function is not what the staging app calls, and this repository does not deploy Supabase functions, so the edit does not change staging or production until someone deploys it on purpose to the legacy project. Security and GDPR findings are in [GDPR_SECURITY.md](./GDPR_SECURITY.md).
 
 ## Superadmin (read-only, do not change)
 
@@ -169,7 +169,7 @@ The flow that would make one minute realistic: open Today, tap the court, absenc
 
 ## Legacy code in this repository
 
-These issues are real in **this** Vite project and on `acecourt-eight.vercel.app` if that database is still used. They are **not** the bugs on `www.acecourt.dk` or staging. They were not changed, because `main` is the only branch and GitHub/Vercel already labels a deploy of it as Production for that old project. A half-applied security patch there would not help clubs and is the wrong schema.
+These issues are real in **this** Vite project and on `acecourt-eight.vercel.app` if that database is still used. They are **not** the bugs on `www.acecourt.dk` or staging. The service-role functions and the RLS gaps were left in place. `main` is the only branch, and GitHub/Vercel already labels a deploy of it as Production for that old project. Closing those holes here would not protect a club on staging, and it would change the wrong database. The invitation log line is the exception, because deleting it does not change the response and does not run until that function is deployed.
 
 Critical if that old database is still reachable:
 
@@ -191,6 +191,36 @@ Medium and low: route guards call `navigate` during render; level progress math 
 
 The live product already sells the right job: a club plans the season, a coach runs the court from a phone, parents stay informed without an account, and the club can see who is ready to move up and who is slipping. The gaps that will show up in a pilot are the ones in this review: a parent who can see level and CourtDNA, a substitute who cannot take a court safely, XP that might pay twice, and an “at risk” list the coach never sees. Closing those, on staging, with the superadmin screen left as it is, is the difference between a convincing demo and a tool a club will trust with its juniors.
 
+## Grades
+
+Honest grades for the **live** product, from the staging client, the public guide, and read-only HTTP checks. This repository is not graded as the product. “A” means a club can trust it for juniors on a phone. Nothing here was re-scored after a code change, because the live app was not changed.
+
+| Area | Grade | Why |
+| --- | --- | --- |
+| Club administration | B | Courts, season plan, CSV import, teams, messages, and cancellations are the product. Coach membership is still a display name, and a second lead needs a hand-run SQL file. |
+| At-risk overview | C | Admins already have the right flags on `/admin/udvikling`. The coach on court does not get the list, and the formula cannot be checked from this repo. |
+| XP fairness | C | The server, not the browser, returns `xp_awarded`, and a second coach is blocked from rating the same player. Attendance does not load the saved row, so a second save can rewrite who was present. Idempotency is not visible. |
+| Parents see only focus and practical info | D | The parent dashboard renders level, total XP, and AceCoins from real columns. The CourtDNA card is built to show `score/5` and is empty only because the query is stubbed. |
+| Players, ratings stay coach-only | B | Player home shows XP, level, and coins, which is allowed, and the UI strings do not show dimension scores. `review` is still requested from `/api/spiller/fokus` and should be confirmed server-side. |
+| Mobile, whole team in under a minute | D | The guide describes that flow. The shipped attendance and rating screens do not. Demo login is off, so 360×640 and 390×844 were not timed. |
+| Several coaches and a substitute | D | Name arrays exist. There is no same-slot pickup, attendance is last POST wins, and the second rater is rejected instead of recorded. |
+| Security of the live app, from the outside | C | A couple of APIs return 401/403 when logged out, and staging sends HSTS. There is no CSP, frame, or referrer policy on the login response, CORS is `*`, and the parent page over-fetches. Server policies were not visible. |
+| GDPR readiness | D | `/privatliv` and `/vilkaar` exist and name a controller, a contact, and a 90-day deletion claim. They do not match the data the app actually holds (see the other document). There is no export, no erasure tool, and no DPA page. |
+| Legacy Vite project, if its database is still open | F | Service-role functions do not check the caller. A user can write their own XP. That is a different system from the grades above. |
+
+## Roadmap to A+
+
+Still staging first, superadmin left as it is, parents never shown ratings or levels.
+
+1. **Parent trust.** Stop selecting `level`, `xp`, `ace_coins`, and rating rows for parents. Emails and links carry focus, cancellation, court, and time only. This is the item a club will notice first.
+2. **One court, one minute.** Today, absences already off, one save, then large 1–5 targets. Unique attendance so a retry cannot double XP. Drafts survive a reload.
+3. **Whoever is on the court.** Add `team_coaches` and `session_staff` beside the current name columns. A substitute can take a court in the same hour and correct a rating, with a name on the row and no second XP grant.
+4. **The coach’s risk list.** The same flags admins already have, limited to today’s players, one sentence each, never mailed to parents.
+5. **GDPR the club can sign.** Record of parental consent, export and erasure for one child, a DPA a lawyer has approved, policies that list the real data and the real vendors, EU region confirmed, no names in logs or in any AI call. Detail and effort are in [GDPR_SECURITY.md](./GDPR_SECURITY.md).
+
+Differentiators once those are true: the club sees who is about to quit or ready to move up, the parent is never handed a rating, and a substitute can run the court from a phone without a second coach’s save destroying the first. That is a narrower product than a generic club app, and it is the one this guide already describes.
+
 ## What was fixed in this pull request
 
-No application code, schema, route, permission, or superadmin behavior was changed. The live app’s source is not in this repository, there is no staging branch to target, and a migration here would not be staging-first for the real database.
+- Legacy `supabase/functions/invite-member`: it no longer logs the invitee’s email, the raw invitation token, or the database error object. The HTTP response is unchanged. The function still has no caller check; that was not “fixed” here, on purpose.
+- No schema, route, permission, superadmin behavior, or live Next.js code was changed. There is no staging branch to target. Merging this pull request does not update `acecourt-staging.vercel.app` or `www.acecourt.dk`.
